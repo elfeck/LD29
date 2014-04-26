@@ -1,0 +1,6 @@
+name: elfecksld29game
+description: My LD29 game
+author: Sebastian Kreisel <kreisel.sebastian@gmail.com>
+homepage: http://elfeck.com
+dependencies:
+    browser: any
