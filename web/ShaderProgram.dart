@@ -48,4 +48,8 @@ class ShaderProgram {
         new Float32List.fromList(mat));
   }
 
+  void uploadUniformSamplerGL(String name, int loc) {
+    GL.uniform1i(getUniformLocationGL(name), loc);
+  }
+
 }

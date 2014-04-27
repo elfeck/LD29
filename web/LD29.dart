@@ -8,12 +8,16 @@ import 'dart:web_gl';
 
 part 'Scene.dart';
 part 'MainScene.dart';
+part 'Entities.dart';
 
 part 'Vecd.dart';
 part 'Quad.dart';
+part 'TexQuad.dart';
 part 'Quadgrid.dart';
 part 'ShaderProgram.dart';
 part 'ShaderSource.dart';
+part 'TextureGL.dart';
+part 'FontRendering.dart';
 
 RenderingContext GL;
 Random rnd = new Random();
@@ -28,6 +32,14 @@ List<double> mvpMatrix = new List.from([
   0, 0, 0, 1
 ]);
 
+int rndBet(int x, int y) {
+  return rnd.nextInt(y - x) + x;
+}
+
+int rn(int x) {
+  return rnd.nextInt(x);
+}
+
 
 class LD29 {
 
@@ -37,7 +49,7 @@ class LD29 {
 
   static bool mouseClicked = false;
   static bool mouseDrag = false;
-  static Vec2 mouseCoord = new Vec2(0, 0);
+  static Vec2 mouseCoord = new Vec2(-1, -1);
 
   LD29() {
     last = 0.0;
@@ -52,6 +64,8 @@ class LD29 {
       return false;
     }
     GL.clearColor(0.7, 0.3, 0.3, 1.0);
+    // GL.enable(BLEND);
+    // GL.blendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
     return true;
   }
 
