@@ -13,7 +13,7 @@ part 'Entities.dart';
 part 'Vecd.dart';
 part 'Quad.dart';
 part 'TexQuad.dart';
-part 'Quadgrid.dart';
+part 'QuadGrid.dart';
 part 'ShaderProgram.dart';
 part 'ShaderSource.dart';
 part 'TextureGL.dart';
@@ -47,6 +47,7 @@ class LD29 {
   Scene activeScene;
   double last;
 
+  static bool enterPressed = false;
   static bool mouseClicked = false;
   static bool mouseDrag = false;
   static Vec2 mouseCoord = new Vec2(-1, -1);
@@ -87,6 +88,10 @@ class LD29 {
       mouseDrag = false;
     });
 
+    window.onKeyUp.listen((KeyboardEvent e) {
+      if(e.keyCode == KeyCode.ENTER) enterPressed = true;
+    });
+
     activeScene = new MainScene();
   }
 
@@ -98,6 +103,7 @@ class LD29 {
     execDrawGL(delta);
     
     mouseClicked = false;
+    enterPressed = false;
   }
   
   void execDoLogic(double delta) {

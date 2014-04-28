@@ -52,4 +52,12 @@ class ShaderProgram {
     GL.uniform1i(getUniformLocationGL(name), loc);
   }
 
+  void uploadUniformFloatGL(String name, double value) {
+    GL.uniform1f(getUniformLocationGL(name), value);
+  }
+
+  void uploadUniformVec2GL(String name, Vec2 value) {
+    GL.uniform2f(getUniformLocationGL(name), value.x, value.y);
+  }
+
 }

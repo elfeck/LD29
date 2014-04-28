@@ -125,7 +125,6 @@ class Earth extends Entity {
   }
 
   bool checkRoot(List<Tree> trees) {
-    if(gridPos.y < 3) return false;
     for(Tree t in trees) {
       int x = gridPos.x - t.gridPos.x;
       int y = gridPos.y - t.gridPos.y;

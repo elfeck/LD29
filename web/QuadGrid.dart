@@ -9,6 +9,10 @@ class Quadgrid {
   int attribLoc_1;
   int attribLoc_2;
 
+  double offset = 26;
+  double scroll = 0;
+  Vec2 fixedOffs = new Vec2(-DISPLAY_WIDTH / 2.0, -DISPLAY_HEIGHT / 2.0);
+
   List<Quad> quads;
   
   Buffer vb, ib;
@@ -20,15 +24,14 @@ class Quadgrid {
   }
 
   void initQuads() {
-    for(int x = 0; x < DISPLAY_WIDTH / size; x++) {
-      for(int y = DISPLAY_HEIGHT / size - 1; y >= 0; y--) {
-        Vec2 gridPos = new Vec2(x, DISPLAY_HEIGHT / size - y - 1);
-        quads.add(new Quad(
-                new Vec2(x * size - DISPLAY_WIDTH * 0.5,y * size - DISPLAY_HEIGHT * 0.5),
-                size,
-                gridPos
-                           ));
-      }
+    int totalHeight = DISPLAY_HEIGHT + size * offset;
+    int totalWidth = DISPLAY_WIDTH;
+    for(int y = 0; y < totalHeight / size; y++) {
+      for(int x = 0; x < totalWidth / size; x++) {
+        Vec2 pos = new Vec2(x * size, y * size);
+        Vec2 gridPos = new Vec2(x, y);
+        quads.add(new Quad(pos, size, gridPos));
+      } 
     }
   }
   
@@ -101,6 +104,8 @@ class Quadgrid {
     GL.viewport(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
     program.bindGL();
     program.uploadUniformMatGL("mvp_matrix", mvpMatrix);
+    program.uploadUniformFloatGL("offset", scroll * size);
+    program.uploadUniformVec2GL("fixed_offs", fixedOffs);
     GL.drawElements(TRIANGLES, 6 * quads.length, UNSIGNED_SHORT, 0);
     program.unbindGL();
     unbindGL();
@@ -122,7 +127,11 @@ class Quadgrid {
   }
   
   Quad quadAt(int x, int y) {
-    return quads[x * MAX_GRID_H + y];
+    return quads[(y + offset) * MAX_GRID_W + x];
+  }
+
+  Quad quadAtOffs(int x, int y) {
+    return quads[y * MAX_GRID_W + x];
   }
 
 }

@@ -24,10 +24,15 @@ class MainScene extends Scene {
   FontRendering nitroText;
   FontRendering rootText;
 
+  List<FontRendering> tut = new List<FontRendering>(7);
+  FontRendering f1, f2, f3;
+
   int availableRoot = 5;
   double water = 20;
   double nitro = 5;
   int growth = 0;
+  
+  bool once = true;
 
   int waterSpawnTime = 5 * 1000;
   int nitroSpawnTime = 10 * 1000;
@@ -42,6 +47,13 @@ class MainScene extends Scene {
   double waterPerMs = 0.45 * 0.001;
   double nitroPerMs = 0.1 * 0.001;
   
+  bool started = false;
+  bool begin = false;
+  bool end = false;
+  bool won = false;
+  bool donedone = false;
+  double scrollspeed = (5.0 / Quadgrid.size) * 0.001;
+  
   MainScene() {
     grid = new Quadgrid();
     grid.initGL();
@@ -53,6 +65,7 @@ class MainScene extends Scene {
     waterText = new FontRendering(new Vec2(345, 2), "h2o:     ", 16, 1);
     nitroText = new FontRendering(new Vec2(10, 2), "n2:     ", 16, 2);
     rootText = new FontRendering(new Vec2(190, 2), "root:     ", 16, 3);
+
     waterText.initGL();
     nitroText.initGL();
     rootText.initGL();
@@ -62,56 +75,93 @@ class MainScene extends Scene {
       allEntities[i] = new List<Entity>(grid.MAX_GRID_H);
     }
     initScene();
+    initAbove();
+    initTut();
   }
 
   void delegateDrawGL(double delta) {
     grid.drawGL();
-    waterText.drawGL();
-    nitroText.drawGL();
-    rootText.drawGL();
+    if(donedone && !once) {
+      f1.drawGL();
+      f2.drawGL();
+      f3.drawGL();
+      return;
+    }
+    if(!started) {
+      for(FontRendering f in tut) {
+        if(f != null) f.drawGL();
+      }
+    }
+    if(begin && !end) {
+      waterText.drawGL();
+      nitroText.drawGL();
+      rootText.drawGL();
+    }
   }
 
   void delegateDoLogic(double delta) {
-    /* mosue shit */
-    int mX = (LD29.mouseCoord.x / Quadgrid.size).floor();
-    int mY = (LD29.mouseCoord.y / Quadgrid.size).floor();
-    if(LD29.mouseDrag && availableRoot > 0 && mX > 0 && mY > 0) {
-      if(allEntities[mX][mY].checkRoot(allTree)) {
-        addTree(mX, mY, true);
-        availableRoot--;
+    if(donedone) initEnd();
+    if(!started) {
+      if(LD29.enterPressed) {
+        started = true;
       }
+      return;
     }
-    for(List<Entity> le in allEntities) {
-      for(Entity e in le) {
-        e.checkMouseOver(mX, mY);
-        e.doLogic(delta);
-      }
+    if(!begin) {
+      scrollDown(delta);
     }
-    /* consume shit */
-    consume(delta);
-    handleSpawn(delta);
-    handleRoot(delta);
-    retrieveWater(delta);
-    retrieveNitro(delta);
-    if(water <= 0) water = 0.0;
-    if(nitro <= 0) nitro = 0.0;
-    /** removal */
-    handleGrowth(delta);
-    Entity e;
-    for(int j = 0; j < allEntities.length; j++) {
-      for(int i = 0; i < allEntities[j].length; i++) {
-        e = allEntities[j][i];
-        if(e.dead) {
-          if(e is Water) allWater.remove(e);
-          if(e is Nitro) allNitro.remove(e);
-          if(e is Tree) allTree.remove(e);
-          allEntities[j][i] = new Earth(grid.quadAt(j, i));
-          int l = allWater.length;
+    if(end) {
+      scrollUp(delta);
+      return;
+    }
+    if(begin) {
+      /* mosue shit */
+      int mX = (LD29.mouseCoord.x / Quadgrid.size).floor();
+      int mY = (LD29.mouseCoord.y / Quadgrid.size).floor() + grid.scroll;
+      if(LD29.mouseDrag && availableRoot > 0 && mX >= 0 && mY >= 0) {
+        if(allEntities[mX][mY - grid.offset].checkRoot(allTree)) {
+          addTree(mX, mY - grid.offset, true);
+          availableRoot--;
         }
       }
+      for(List<Entity> le in allEntities) {
+        for(Entity e in le) {
+          e.checkMouseOver(mX, mY);
+          e.doLogic(delta);
+        }
+      }
+      /* consume shit */
+      consume(delta);
+      handleSpawn(delta);
+      handleRoot(delta);
+      retrieveWater(delta);
+      retrieveNitro(delta);
+      if(water <= 0) {
+        water = 0.0;
+        end = true;
+      }
+      if(nitro <= 0) {
+        nitro = 0.0;
+        end = true;
+      }
+      /** removal */
+      handleGrowth(delta);
+      Entity e;
+      for(int j = 0; j < allEntities.length; j++) {
+        for(int i = 0; i < allEntities[j].length; i++) {
+          e = allEntities[j][i];
+          if(e.dead) {
+            if(e is Water) allWater.remove(e);
+            if(e is Nitro) allNitro.remove(e);
+            if(e is Tree) allTree.remove(e);
+            allEntities[j][i] = new Earth(grid.quadAt(j, i));
+            int l = allWater.length;
+          }
+        }
+      }
+      /** TeXT */
+      updateText();
     }
-    /** TeXT */
-    updateText();
   } 
 
   void initScene() {
@@ -302,7 +352,104 @@ class MainScene extends Scene {
               false
                                                                          );
       growth++;
+    } else {
+      end = true;
+      won = true;
     }
+  }
+
+  void initAbove() {
+    int r;
+    for(int y = 0; y < grid.offset; y++) {
+      for(int x = 0; x < grid.MAX_GRID_W; x++) {
+        r = rnd.nextInt(2);
+        grid.quadAtOffs(x, y).setColor(Skye.colors[r].copy());
+      }
+    }
+    for(int x = 11; x < 13; x++) {
+      for(int y = grid.offset - 2; y < grid.offset; y++) {
+        r = rnd.nextInt(2);
+        grid.quadAtOffs(x, y).setColor(Green.colors[r].copy());
+      }
+    }
+  }
+
+  void scrollDown(double delta) {
+    grid.scroll += grid.offset * scrollspeed * delta;
+    if(grid.scroll >= grid.offset) {
+      grid.scroll = grid.offset;
+      begin = true;
+      for(int x = 11; x < 13; x++) {
+        for(int y = grid.offset - 2; y < grid.offset; y++) {
+          int r = rnd.nextInt(2);
+          grid.quadAtOffs(x, y).setColor(Skye.colors[r].copy());
+        }
+      }
+    }
+  }
+
+  void scrollUp(double delta) {
+    grid.scroll -= grid.offset * scrollspeed * 2 * delta;
+    if(grid.scroll <= 0) {
+      grid.scroll = 0;
+      donedone = true;
+    }
+  }
+
+  void initTut() {
+    List<String> s = new List<String>(7);
+    s[0] = "grow little tree. grow";
+    s[1] = "a game for ludum dare 29 by sebastian kreisel";
+    s[2] = "-- connect the roots to water or ammonium --";
+    s[3] = "-- if your tree has was it needs. it grows --";
+    s[4] = "-- if your tree  lacks something. it dies --";
+    s[5] = "give your tree a long and happy life";
+    s[6] = "press enter to start";
+    
+    tut[0] = new FontRendering(new Vec2((DISPLAY_WIDTH - s[0].length * 18 / 2.0) -
+            DISPLAY_WIDTH / 2.0, 500),  s[0], 18, 0);
+    tut[1] = new FontRendering(new Vec2((DISPLAY_WIDTH - s[1].length * 8 / 2.0) -
+            DISPLAY_WIDTH / 2.0, 470),  s[1], 8, 0);
+    tut[2] = new FontRendering(new Vec2((DISPLAY_WIDTH - s[2].length * 10 / 2.0) -
+            DISPLAY_WIDTH / 2.0, 420),  s[2], 10, 0);
+    tut[3] = new FontRendering(new Vec2((DISPLAY_WIDTH - s[3].length * 10 / 2.0) -
+            DISPLAY_WIDTH / 2.0, 405),  s[3], 10, 0);
+    tut[4] = new FontRendering(new Vec2((DISPLAY_WIDTH - s[4].length * 10 / 2.0) -
+            DISPLAY_WIDTH / 2.0, 390),  s[4], 10, 0);
+    tut[5] = new FontRendering(new Vec2((DISPLAY_WIDTH - s[5].length * 13 / 2.0) -
+            DISPLAY_WIDTH / 2.0, 350),  s[5], 13, 0);    
+    tut[6] = new FontRendering(new Vec2((DISPLAY_WIDTH - s[6].length * 20 / 2.0) -
+            DISPLAY_WIDTH / 2.0, 200),  s[6], 20, 0);
+    tut[0].initGL();
+    tut[1].initGL();
+    tut[2].initGL();
+    tut[3].initGL();
+    tut[4].initGL();
+    tut[5].initGL();
+    tut[6].initGL();
+  }
+
+  void initEnd() {
+    if(!once) return;
+    String s1, s3;
+    if(won) {
+      s1 = "your tree had a fulfilled life";
+      s3 = "it died happy and in peace";
+    } else {
+      s1 = "your tree lived fast and died young";
+      s3 = "they say he perished way too soon";
+    }
+    String s2 = "thanks for playing. reload the page to play again";
+    f1 = new FontRendering(new Vec2((DISPLAY_WIDTH - s1.length * 13 / 2.0) -
+            DISPLAY_WIDTH / 2.0, 550),  s1, 13, 0);    
+    f3 = new FontRendering(new Vec2((DISPLAY_WIDTH - s3.length * 13 / 2.0) -
+            DISPLAY_WIDTH / 2.0, 530),  s3, 13, 0);
+    f2 = new FontRendering(new Vec2((DISPLAY_WIDTH - s2.length * 8 / 2.0) -
+            DISPLAY_WIDTH / 2.0, 490),  s2, 8, 0);
+    f1.initGL();
+    f2.initGL();
+    f3.initGL();
+    once = false;
   }
 
 }

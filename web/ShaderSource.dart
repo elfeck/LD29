@@ -7,12 +7,17 @@ attribute vec4 vert_position;
 attribute vec4 vert_color;
 
 uniform mat4 mvp_matrix;
+uniform float offset;
+uniform vec2 fixed_offs;
 
 varying vec4 frag_color;
 
 void main() {
   frag_color = vec4(vert_color);
-  gl_Position = mvp_matrix * vert_position;
+  vec4 pos = vec4((vert_position.x + fixed_offs.x),
+                  -(vert_position.y + fixed_offs.y - offset),
+                  vert_position.zw);
+  gl_Position = mvp_matrix * pos;
 }
 ''';
 
