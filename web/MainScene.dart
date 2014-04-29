@@ -25,7 +25,7 @@ class MainScene extends Scene {
   FontRendering rootText;
 
   List<FontRendering> tut = new List<FontRendering>(7);
-  FontRendering f1, f2, f3;
+  FontRendering f1, f2, f3, f4, f5;
 
   int availableRoot = 5;
   double water = 20;
@@ -85,6 +85,8 @@ class MainScene extends Scene {
       f1.drawGL();
       f2.drawGL();
       f3.drawGL();
+      if(f4 != null) f4.drawGL();
+      if(f5 != null) f5.drawGL();
       return;
     }
     if(!started) {
@@ -435,6 +437,14 @@ class MainScene extends Scene {
     if(won) {
       s1 = "your tree had a fulfilled life";
       s3 = "it died happy and in peace";
+      String s4 = "here you should see your tree. but 48h were not enough.";
+      String s5 =  "i am sorry";
+      f4 = new FontRendering(new Vec2((DISPLAY_WIDTH - s4.length * 8 / 2.0) -
+            DISPLAY_WIDTH / 2.0, 300),  s4, 8, 0);  
+      f4.initGL();
+      f5 = new FontRendering(new Vec2((DISPLAY_WIDTH - s5.length * 8 / 2.0) -
+            DISPLAY_WIDTH / 2.0, 290),  s5, 8, 0);  
+      f5.initGL();
     } else {
       s1 = "your tree lived fast and died young";
       s3 = "they say he perished way too soon";
