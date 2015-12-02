@@ -2,9 +2,9 @@ part of LD29;
 
 class Quadgrid {
 
-  const static int size = 20;
-  const MAX_GRID_W = DISPLAY_WIDTH / size;
-  const MAX_GRID_H = DISPLAY_HEIGHT / size;
+  static int size = 20;
+  int MAX_GRID_W = DISPLAY_WIDTH / size;
+  int MAX_GRID_H = DISPLAY_HEIGHT / size;
 
   int attribLoc_1;
   int attribLoc_2;
